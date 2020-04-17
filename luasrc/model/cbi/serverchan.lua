@@ -29,7 +29,7 @@ a.default=0
 a.rmempty=true
 
 a=s:taboption("tab_basic", Value,"sckey",translate('SCKEY'), translate("Serverchan Sckey").."<br>调用代码获取<a href='http://sc.ftqq.com' target='_blank'>点击这里</a><br><br>")
-a.rmempty=true
+a.rmempty=false
 
 device_name=s:taboption("tab_basic", Value,"device_name",translate('本设备名称'))
 device_name.rmempty=true
@@ -38,14 +38,8 @@ device_name.description = translate("在推送信息标题中会标识本设备�
 sleeptime=s:taboption("tab_basic", Value,"sleeptime",translate('检测时间间隔'))
 sleeptime.default = "60"
 sleeptime.description = translate("越短的时间时间响应越及时，但会占用更多的系统资源")
-
-debuglevel=s:taboption("tab_basic", ListValue,"debuglevel",translate("日志调试等级"))
-debuglevel:value("",translate("关闭"))
-debuglevel:value("1",translate("简单"))
-debuglevel:value("2",translate("调试"))
-debuglevel.rmempty = true 
+debuglevel=s:taboption("tab_basic", Flag,"debuglevel",translate("开启日志"))
 debuglevel.optional = true
-
 device_aliases= s:taboption("tab_basic", DynamicList, "device_aliases", translate("设备别名"))
 device_aliases.rmempty = true 
 device_aliases.optional = true
@@ -75,7 +69,7 @@ a= s:taboption("tab_basic2", Value, "ipv4_URL", "URL 地址")
 a.rmempty = true 
 a.default = "members.3322.org/dyndns/getip"
 a:depends({serverchan_ipv4="2"})
-a.description = translate("<br/>会因服务器稳定性/连接频繁等原因导致获取失败，一般不推荐")
+a.description = translate("<br/>会因服务器稳定性/连接频繁等原因导致获取失败")
 
 a=s:taboption("tab_basic2", ListValue,"serverchan_ipv6",translate("ipv6 变动通知"))
 a.default="disable"
@@ -100,7 +94,7 @@ a= s:taboption("tab_basic2", Value, "ipv6_URL", "URL 地址")
 a.rmempty = true 
 a.default = "v6.ip.zxinc.org/getip"
 a:depends({serverchan_ipv6="2"})
-a.description = translate("<br/>会因服务器稳定性/连接频繁等原因导致获取失败，一般不推荐")
+a.description = translate("<br/>会因服务器稳定性/连接频繁等原因导致获取失败")
 
 a=s:taboption("tab_basic2", Flag,"serverchan_up",translate("设备上线通知"))
 a.default=0
@@ -204,8 +198,9 @@ end
 --免打扰
 sheep=s:taboption("tab_basic4", ListValue,"serverchan_sheep",translate("免打扰时段设置"),translate("在指定整点时间段内，暂停推送消息<br/>免打扰时间中，定时推送也会被阻止。"))
 sheep:value("0",translate("关闭"))
-sheep:value("1",translate("模式一：脚本挂起，延迟发送"))
-sheep:value("2",translate("模式二：静默模式，不发送任何信息"))
+sheep:value("1",translate("模式一：脚本挂起"))
+sheep:value("2",translate("模式二：静默模式"))
+sheep.description = translate("模式一停止一切检测，包括无人值守。")
 sheep.rmempty = true 
 sheep.optional = true
 sheep=s:taboption("tab_basic4", ListValue,"starttime",translate("免打扰开始时间"))
@@ -260,12 +255,20 @@ end
 --高级设置
 a=s:taboption("tab_basic5", Value,"up_timeout",translate('设备上线检测超时'))
 a.default = "2"
+a.optional=false
 a.datatype="uinteger"
 a=s:taboption("tab_basic5", Value,"down_timeout",translate('设备离线检测超时'))
-a.default = "5"
+a.default = "20"
+a.optional=false
 a.datatype="uinteger"
-a.description = translate("如果遇到设备 wifi 休眠，频繁推送离线，可以把超时时间设置长一些")
-
+a=s:taboption("tab_basic5", Value,"timeout_retry_count",translate('离线检测次数'))
+a.default = "2"
+a.optional=false
+a.datatype="uinteger"
+a.description = translate("若无二级路由设备，信号强度良好，可以减少以上数值<br/>因夜间 wifi 休眠较为玄学，遇到设备频繁推送断开，烦请自行调整参数<br/>..╮(╯_╰）╭..")
+a=s:taboption("tab_basic5", Value,"thread_num",translate('最大并发进程数'))
+a.default = "3"
+a.datatype="uinteger"
 a=s:taboption("tab_basic5", Value, "soc_code", "自定义温度读取命令")
 a.rmempty = true 
 a:value("",translate("默认"))
@@ -344,7 +347,6 @@ a:depends({public_ip_event="1"})
 local logfile = "/tmp/serverchan/serverchan.log" 
 e=s:taboption("log",TextValue,"log")
 e:depends({debuglevel="1"})
-e:depends({debuglevel="2"})
 e.rows=26
 e.wrap="off"
 e.readonly=true
@@ -356,7 +358,6 @@ end
 
 e=s:taboption("log", Button,translate(""))
 e:depends({debuglevel="1"})
-e:depends({debuglevel="2"})
 e.inputtitle=translate("清理日志")
 e.inputstyle = "clean_log"
 function e.write(self, section)
