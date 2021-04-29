@@ -3,8 +3,8 @@ name: auto_merge
 on:
   workflow_dispatch:
   schedule:
-    # 每天下午16点,UTC时间比北京时间晚8小时
-    - cron: '0 8 * * *'
+    # 每周五下午16点,UTC时间比北京时间晚8小时
+    - cron: '0 8 * * fri'
 
 env:
   #源仓库地址
